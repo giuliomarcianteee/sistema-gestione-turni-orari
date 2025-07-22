@@ -22,20 +22,20 @@ import {
   TextField,
   MenuItem,
   IconButton,
-  Tooltip,
   Card,
   CardContent,
-  Grid
+  Grid,
+  FormControl,
+  InputLabel,
+  Select
 } from '@mui/material';
 import {
   ArrowBack,
   Print,
-  Edit,
-  Delete,
   SwapHoriz,
-  Add,
   Refresh,
-  PlayArrow
+  PlayArrow,
+  CalendarMonth
 } from '@mui/icons-material';
 import { turniApi } from '../services/api';
 import moment from 'moment';
@@ -48,6 +48,8 @@ const GrigliaOrariPage = () => {
   const navigate = useNavigate();
   const printRef = useRef();
   
+  const [currentMese, setCurrentMese] = useState(mese);
+  
   const [griglia, setGriglia] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -56,12 +58,31 @@ const GrigliaOrariPage = () => {
 
   useEffect(() => {
     loadGriglia();
-  }, [codice, mese]);
+  }, [codice, currentMese]);
+
+  // Genera lista mesi per tutto l'anno corrente e prossimo
+  const generateMesiOptions = () => {
+    const mesi = [];
+    const currentYear = moment().year();
+    const years = [currentYear, currentYear + 1];
+    
+    years.forEach(year => {
+      for (let month = 1; month <= 12; month++) {
+        const meseValue = `${year}-${month.toString().padStart(2, '0')}`;
+        const meseLabel = moment(meseValue).format('MMMM YYYY');
+        mesi.push({ value: meseValue, label: meseLabel });
+      }
+    });
+    
+    return mesi;
+  };
+
+  const mesiOptions = generateMesiOptions();
 
   const loadGriglia = async () => {
     try {
       setLoading(true);
-      const response = await turniApi.getGrigliaOrari(codice, mese);
+      const response = await turniApi.getGrigliaOrari(codice, currentMese);
       setGriglia(response.data);
     } catch (err) {
       setError('Errore nel caricamento della griglia');
@@ -69,6 +90,13 @@ const GrigliaOrariPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleMeseChange = (event) => {
+    const newMese = event.target.value;
+    setCurrentMese(newMese);
+    // Aggiorna anche l'URL per mantenere la consistenza
+    navigate(`/negozio/${codice}/griglia/${newMese}`, { replace: true });
   };
 
   const handlePrint = () => {
@@ -121,17 +149,27 @@ const GrigliaOrariPage = () => {
   };
 
   const handleGenerateTurni = async () => {
-    if (window.confirm('Sei sicuro di voler generare nuovi turni? Questo sostituirà i turni esistenti.')) {
+    const isConfirmed = window.confirm(
+      'Vuoi rigenerare tutti i turni per questo mese?\n\n' +
+      '⚠️ ATTENZIONE: Questo cancellerà tutti i turni esistenti e ne creerà di nuovi.\n\n' +
+      '✅ I nuovi turni saranno diversi dai precedenti grazie alla randomizzazione.\n\n' +
+      'Continuare?'
+    );
+    
+    if (isConfirmed) {
       try {
+        setLoading(true);
+        // Prima cancella i turni esistenti, poi genera quelli nuovi
         await turniApi.generaTurni({
           negozio: codice,
-          mese: mese,
+          mese: currentMese,
           cancellaPrecedenti: true
         });
-        alert('Turni generati con successo!');
+        alert('✅ Turni rigenerati con successo!\n\nI nuovi turni sono stati creati con una distribuzione diversa.');
         loadGriglia();
       } catch (err) {
-        alert('Errore nella generazione turni: ' + (err.response?.data?.error || err.message));
+        setError('Errore nella rigenerazione turni: ' + (err.response?.data?.error || err.message));
+        setLoading(false);
       }
     }
   };
@@ -149,11 +187,6 @@ const GrigliaOrariPage = () => {
       case 'Special': return '#e8f5e8';
       default: return '#f5f5f5';
     }
-  };
-
-  const formatTurno = (turno) => {
-    if (!turno) return '';
-    return `${turno.tipoTurno}\n${turno.oraInizio}-${turno.oraFine}`;
   };
 
   if (loading) {
@@ -176,10 +209,74 @@ const GrigliaOrariPage = () => {
     <Box>
       {/* Header - non stampabile */}
       <Container maxWidth="xl" sx={{ mt: 2, mb: 2 }} className="no-print">
+        {/* Titolo e selettore mese */}
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Box display="flex" alignItems="center" gap={3}>
+            <Box>
+              <Typography variant="h4" component="h1" gutterBottom>
+                📅 Griglia Turni - {griglia.negozio}
+              </Typography>
+              <Typography variant="subtitle1" color="text.secondary">
+                {moment(currentMese).format('MMMM YYYY')}
+              </Typography>
+            </Box>
+            
+            {/* Selettore Mese */}
+            <FormControl sx={{ minWidth: 200 }}>
+              <InputLabel id="mese-select-label">
+                <CalendarMonth sx={{ mr: 1 }} />
+                Seleziona Mese
+              </InputLabel>
+              <Select
+                labelId="mese-select-label"
+                value={currentMese}
+                onChange={handleMeseChange}
+                label="Seleziona Mese"
+                sx={{
+                  backgroundColor: 'white',
+                  '& .MuiSelect-select': {
+                    display: 'flex',
+                    alignItems: 'center'
+                  }
+                }}
+              >
+                {mesiOptions.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+          
+          {/* Pulsante principale - Rigenera Turni */}
+          <Button
+            startIcon={<PlayArrow />}
+            onClick={handleGenerateTurni}
+            variant="contained"
+            color="success"
+            size="large"
+            sx={{
+              minWidth: 200,
+              height: 56,
+              fontSize: '1.1rem',
+              fontWeight: 'bold',
+              boxShadow: 3,
+              '&:hover': {
+                boxShadow: 6,
+              }
+            }}
+          >
+            🎲 Rigenera Turni
+          </Button>
+        </Box>
+
+        {/* Barra azioni secondarie */}
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
           <Button
             startIcon={<ArrowBack />}
             onClick={() => navigate(`/negozio/${codice}`)}
+            variant="outlined"
           >
             Torna al Negozio
           </Button>
@@ -189,17 +286,10 @@ const GrigliaOrariPage = () => {
               startIcon={<PlayArrow />}
               onClick={handleGenerateTurni}
               variant="contained"
-              color="primary"
+              color="success"
+              sx={{ fontWeight: 'bold' }}
             >
-              Genera Turni
-            </Button>
-            
-            <Button
-              startIcon={<Refresh />}
-              onClick={loadGriglia}
-              variant="outlined"
-            >
-              Aggiorna
+              🎲 Genera Turni
             </Button>
             
             <Button
@@ -220,17 +310,22 @@ const GrigliaOrariPage = () => {
             </Button>
           </Box>
         </Box>
+        
+        {/* Info box */}
+        <Alert severity="info" sx={{ mb: 2 }}>
+          💡 <strong>Suggerimento:</strong> Usa il selettore per cambiare mese, poi clicca "🎲 Rigenera Turni" per creare una nuova distribuzione casuale. Ogni rigenerazione cancellerà i turni precedenti e ne creerà di nuovi!
+        </Alert>
       </Container>
 
       {/* Contenuto stampabile */}
       <Container maxWidth="xl" ref={printRef}>
-        {/* Intestazione */}
-        <Box textAlign="center" mb={3}>
+        {/* Intestazione per stampa */}
+        <Box textAlign="center" mb={3} className="print-only">
           <Typography variant="h4" component="h1" gutterBottom>
             Turni Orari - {griglia.negozio}
           </Typography>
           <Typography variant="h6" color="text.secondary">
-            {moment(mese).format('MMMM YYYY')}
+            {moment(currentMese).format('MMMM YYYY')}
           </Typography>
         </Box>
 

@@ -48,6 +48,20 @@ Il **Sistema di Gestione Turni Orari** è una soluzione full-stack progettata pe
 - **Anagrafica completa** con ore contrattuali (settimanali/mensili)
 - **Tracking automatico** delle ore lavorate
 - **Visualizzazione stato** (attivo/inattivo)
+
+### ⚙️ **Configurazione Turni Template**
+- **Griglia interattiva** con giorni della settimana e tipi turno (Mattina/Pomeriggio/Intermezzo)
+- **Modifica diretta** delle fasce orarie con salvataggio automatico nel database
+- **Aggiunta/Eliminazione** turni direttamente dalla griglia
+- **Validazione automatica** degli orari (inizio < fine)
+- **Calcolo automatico** durata turni in ore
+
+### 👨‍💼 **Gestione Quantità Personale**
+- **Definizione fabbisogno** personale per giorno/turno
+- **Selettori separati** Anno e Mese (2025-2027)
+- **Griglia modificabile** per quantità richieste per ogni combinazione giorno/turno
+- **Salvataggio batch** di tutte le modifiche
+- **Inizializzazione automatica** valori predefiniti
 - **Statistiche personalizzate** per ogni dipendente
 
 ### 🛠️ **Configurazione Turni**
@@ -66,14 +80,29 @@ Il **Sistema di Gestione Turni Orari** è una soluzione full-stack progettata pe
 - ✅ **Equità distribuzione**: Carico di lavoro uniforme
 - ✅ **Randomizzazione**: Ogni generazione è unica
 
+#### Processo di Generazione:
+1. **Caricamento configurazioni** (template orari e quantità personale)
+2. **Validazione dati** di input e disponibilità dipendenti
+3. **Distribuzione turni** con algoritmo genetico ottimizzato
+4. **Verifica vincoli** e correzione automatica conflitti
+5. **Ricarica automatica** griglia per visualizzazione immediata
+
 ### 📅 **Griglia Orari Interattiva**
 - **Vista mensile completa** con tutti i dipendenti
 - **Modifica in tempo reale** di singoli turni
 - **Scambio turni** tra dipendenti con un click
 - **Riepilogo ore** con evidenziazione scostamenti
 - **Codice colore** per distinguere i tipi di turno
+- **Navigazione rapida** tra mesi e anni
 
-### �️ **Funzioni Stampa Avanzate**
+### 🔄 **Interfaccia Unificata**
+- **Vista integrata** per ogni negozio con tutte le funzionalità
+- **Selettori separati** Anno/Mese per massima precisione
+- **Configurazione inline** senza necessità di pagine separate
+- **Aggiornamento automatico** dopo ogni operazione
+- **Conferme utente** per operazioni distruttive
+
+### 🛠️ **Funzioni Stampa Avanzate**
 - **Layout ottimizzato** per formato A4
 - **Stampa a colori** per distinguere i turni
 - **Versione B/N** per stampanti monocromatiche  
@@ -168,51 +197,100 @@ npm install
 npm start
 ```
 
+### **5️⃣ Verifica Installazione**
+```bash
+# Test backend
+curl http://localhost:8090/api/turni/negozi
+
+# Test frontend
+# Vai su: http://localhost:3000
+# Dovresti vedere la lista dei negozi
+
+# Test completo: Seleziona un negozio e verifica:
+# ✅ Vista integrata con dipendenti
+# ✅ Selettori Anno/Mese separati  
+# ✅ Griglia configurazione turni modificabile
+# ✅ Griglia quantità personale editabile
+# ✅ Funzione "Genera Turni" operativa
+```
+
+### **🔧 Risoluzione Problemi Comuni**
+```bash
+# Se il frontend non vede le modifiche:
+# 🧹 Pulisci cache browser: Ctrl+F5 (Windows/Linux) o Cmd+Shift+R (Mac)
+# 🔄 Riavvia il dev server: Ctrl+C poi npm start
+
+# Se il backend non si avvia:
+# 🗄️ Verifica MySQL sia in esecuzione
+# 🔌 Controlla connessione database nelle application.properties
+
+# Se le API non funzionano:
+# 🌐 Verifica CORS settings per http://localhost:3000
+# 📡 Controlla endpoint su http://localhost:8090/api/turni/negozi
+```
+
 ---
 
 ## 📖 Utilizzo dell'Applicazione
 
 ### **🎯 Flusso di Lavoro Principale**
 
-#### **Passo 1: Selezione Negozio**
-1. 🏠 Accedi alla **Home Page** (`http://localhost:8090`)
+#### **Passo 1: Selezione Negozio e Periodo**
+1. 🏠 Accedi alla **Home Page** (`http://localhost:3000`)
 2. 🏪 **Seleziona il negozio** dalla lista dei punti vendita
-3. 👁️ Visualizza **dettagli negozio** e dipendenti
+3. � **Imposta Anno e Mese** usando i selettori separati (2025-2027)
+4. �👁️ Visualizza **dettagli negozio** e dipendenti nella vista unificata
 
-#### **Passo 2: Configurazione Turni**
-1. ⚙️ Clicca su **"Configura Turni"**
-2. 📋 Imposta la **griglia settimanale**:
+#### **Passo 2: Configurazione Turni Template (Fasce Orarie)**
+1. 📋 **Visualizza griglia** "Turni Configurati - Fasce Orarie MODIFICABILI"
    - **Righe**: Giorni della settimana (Lunedì → Domenica)
-   - **Colonne**: Tipi turno (Mattina, Pomeriggio, Intermezzo)  
-3. ⏰ Definisci **orari per ogni turno**
-4. 💾 **Salva** la configurazione
+   - **Colonne**: Tipi turno (Mattina, Pomeriggio, Intermezzo)
+2. ➕ **Aggiungi turno**: Clicca su cella vuota
+3. ✏️ **Modifica turno**: Clicca su turno esistente  
+4. ⏰ Definisci **orari** (inizio/fine) nel dialog
+5. 💾 **Salva automaticamente** nel database (tabella 'turni')
+6. 🗑️ **Elimina turno**: Usa icona cestino
 
-#### **Passo 3: Generazione Turni**
-1. 📅 Vai su **"Visualizza Griglia"**
-2. 🗓️ **Seleziona il mese** desiderato
-3. 🎲 Clicca **"Genera Turni"**
-4. ⏳ Il sistema genera automaticamente i turni rispettando tutte le regole
+#### **Passo 3: Definizione Quantità Personale**
+1. � **Visualizza griglia** "Quantità Personale"
+2. � **Imposta numeri** per ogni giorno/turno:
+   - Quante persone servono per Mattina/Pomeriggio/Intermezzo
+   - Per ogni giorno della settimana
+3. 💾 **Salva Quantità**: Clicca pulsante per salvare tutto in batch
 
-#### **Passo 4: Gestione e Modifica**
-1. 📊 **Visualizza la griglia** generata
-2. ✏️ **Modifica turni singoli** cliccando sulla cella
-3. 🔄 **Scambia turni** tra dipendenti
-4. 📈 Controlla il **riepilogo ore mensili**
-5. 🖨️ **Stampa** la pianificazione
+#### **Passo 4: Generazione Turni**
+1. 🎲 **Clicca "Genera Turni"** (pulsante verde prominente)
+2. ⚠️ **Conferma**: Il sistema avverte che cancellerà turni esistenti
+3. ⏳ **Generazione automatica** basata su:
+   - Template orari configurati
+   - Quantità personale definite
+   - Dipendenti disponibili
+4. 🔄 **Ricarica automatica** per visualizzare nuovi turni
 
-### **🎨 Interfaccia Utente**
+#### **Passo 5: Visualizzazione e Gestione**
+1. 📊 **Verifica risultato** nella sezione "Turni Generati"
+2. � **Visualizza Griglia Completa**: Link per vista dettagliata
+3. ✏️ **Modifica manuale**: Se necessario nella griglia completa
+4. 🖨️ **Stampa** la pianificazione finale
 
-#### **Codici Colore**
-- 🟡 **Mattina**: Giallo/Oro
-- 🔵 **Pomeriggio**: Blu  
-- 🟢 **Intermezzo**: Verde
-- 🔴 **Straordinario**: Rosso
-- ⚪ **Riposo**: Bianco
+### **🎨 Interfaccia Utente Integrata**
 
-#### **Indicatori Visivi**
-- ✅ **Ore OK**: Verde (entro target)
-- ⚠️ **Ore Eccessive**: Arancione (>110% target)
-- ❌ **Ore Insufficienti**: Rosso (<90% target)
+#### **Caratteristiche della Vista Unificata**
+- 🏪 **Dettagli negozio** sempre visibili in alto
+- 📅 **Selettori Anno/Mese** separati per precisione
+- 👥 **Lista dipendenti** con ore contrattuali
+- ⚙️ **Griglia configurazione** orari modificabile inline
+- � **Griglia quantità** personale editabile
+- 🎲 **Generazione turni** con feedback immediato
+- 🔄 **Aggiornamento automatico** dopo ogni operazione
+
+#### **Codici Colore e Indicatori**
+- 🟡 **Mattina**: Sfondo giallo/oro nei turni
+- 🔵 **Pomeriggio**: Sfondo blu nei turni
+- 🟢 **Intermezzo**: Sfondo verde nei turni
+- ✅ **Turno configurato**: Cella verde con orari
+- ➕ **Aggiungi turno**: Cella grigia con icona "+"
+- 🔴 **Elimina**: Icona cestino rossa
 
 ---
 

@@ -192,4 +192,52 @@ public class TurniService {
         
         return turno;
     }
+    
+    // Metodi per QuantitaPersonale
+    public List<QuantitaPersonale> getQuantitaPersonale(String negozio, String mese) {
+        // Converti il formato "2025-07" in nome mese italiano "luglio"
+        String nomeMesseItaliano = converteMeseInItaliano(mese);
+        return quantitaPersonaleRepository.findByNegozioAndMese(negozio, nomeMesseItaliano);
+    }
+    
+    public QuantitaPersonale salvaQuantitaPersonale(QuantitaPersonale quantita) {
+        return quantitaPersonaleRepository.save(quantita);
+    }
+    
+    private String converteMeseInItaliano(String meseNumerico) {
+        // Converte "2025-07" in "luglio"
+        String[] parts = meseNumerico.split("-");
+        if (parts.length == 2) {
+            int mese = Integer.parseInt(parts[1]);
+            String[] mesiItaliani = {
+                "", "gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno",
+                "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"
+            };
+            if (mese >= 1 && mese <= 12) {
+                return mesiItaliani[mese];
+            }
+        }
+        return "gennaio"; // fallback
+    }
+    
+    // Metodi per gestire turni template
+    public List<Turno> getTurniTemplate(String negozio) {
+        return turnoRepository.findByNegozioOrderByGiornoSettimanaAscOraInizioAsc(negozio);
+    }
+    
+    public Turno salvaTurnoTemplate(Turno turno) {
+        // Genera un nuovo ID se non esiste
+        if (turno.getId() == null) {
+            // Trova il massimo ID esistente e incrementa
+            Long maxId = turnoRepository.findAll().stream()
+                    .mapToLong(Turno::getId)
+                    .max().orElse(0L);
+            turno.setId(maxId + 1);
+        }
+        return turnoRepository.save(turno);
+    }
+    
+    public void eliminaTurnoTemplate(Long id) {
+        turnoRepository.deleteById(id);
+    }
 }
